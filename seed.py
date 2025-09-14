@@ -6,7 +6,7 @@ import uuid
 
 config = {
     'user': 'root',
-    'password': 'your_password',  # ⚠️ replace with your MySQL root password
+    'password': 'password',
     'host': '127.0.0.1',
 }
 
@@ -46,14 +46,13 @@ def create_table(connection):
         );
         """
         cursor.execute(create_table_query)
-        print("✅ Table user_data created or already exists.")
+        print("Table user_data created or already exists.")
     finally:
         cursor.close()
 
 def insert_data(connection, data):
     cursor = connection.cursor()
     try:
-        # check if email exists already
         cursor.execute("SELECT COUNT(*) FROM user_data WHERE email = %s", (data['email'],))
         if cursor.fetchone()[0] == 0:
             insert_query = """
@@ -61,37 +60,14 @@ def insert_data(connection, data):
             VALUES (%s, %s, %s, %s);
             """
             cursor.execute(insert_query, (
-                str(uuid.uuid4()),  # generate unique UUID
+                str(uuid.uuid4()),
                 data['name'],
                 data['email'],
                 data['age']
             ))
             connection.commit()
-            print(f"✅ Inserted: {data['name']} ({data['email']})")
+            print(f"Inserted: {data['name']} ({data['email']})")
         else:
-            print(f"⚠️ Skipped duplicate: {data['email']}")
+            print(f"Skipped duplicate: {data['email']}")
     finally:
         cursor.close()
-
-
-def main():
-    # Step 1: connect to MySQL server
-    conn = connect_db()
-    create_database(conn)
-    conn.close()
-
-    # Step 2: connect to ALX_prodev DB
-    conn = connect_to_prodev()
-    create_table(conn)
-
-    # Step 3: load CSV and insert
-    with open("user_data.csv", newline='') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            insert_data(conn, row)
-
-    conn.close()
-
-
-if __name__ == "__main__":
-    main()
