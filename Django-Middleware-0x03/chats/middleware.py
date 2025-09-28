@@ -87,7 +87,7 @@ class OffensiveLanguageMiddleware:
             return x_forwarded_for.split(",")[0]
         return request.META.get("REMOTE_ADDR", "")
     
-class RolePermissionMiddleware:
+class RolepermissionMiddleware:
     """
     Middleware to restrict access to certain actions based on user role.
     Only 'admin' or 'moderator' roles are allowed.
