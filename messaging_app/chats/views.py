@@ -17,6 +17,7 @@ from .serializers import ConversationSerializer, MessageSerializer, UserSerializ
 class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
+    permission_classes = [IsParticipantOfConversation]
 
     def create(self, request, *args, **kwargs):
         """
