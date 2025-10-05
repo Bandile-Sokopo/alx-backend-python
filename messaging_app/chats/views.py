@@ -19,6 +19,12 @@ class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationSerializer
     permission_classes = [IsParticipantOfConversation]
 
+    messages = (
+        Message.objects.filter(receiver=user, parent_message__isnull=True)
+        .select_related("sender", "receiver")
+        .prefetch_related("replies", "replies__sender", "replies__receiver")
+    )
+
     def create(self, request, *args, **kwargs):
         """
         Create a new conversation with given participants.
@@ -113,3 +119,28 @@ class IsMessageSenderOrRecipient(permissions.BasePermission):
             obj.sender == request.user
             or request.user in obj.conversation.participants.all()
         )
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_user(request):
+    """
+    Allow the authenticated user to delete their account.
+    This triggers automatic cleanup of related data via signals.
+    """
+    user = request.user
+    username = user.username
+    user.delete()
+    return Response({"message": f"User '{username}' and related data deleted successfully."},
+                    status=status.HTTP_204_NO_CONTENT)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def unread_messages_view(request):
+    """
+    Return all unread messages for the authenticated user.
+    Uses custom manager for efficiency.
+    """
+    user = request.user
+    unread_messages = Message.unread.for_user(user)
+    serializer = MessageSerializer(unread_messages, many=True)
+    return Response(serializer.data)

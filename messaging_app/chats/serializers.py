@@ -33,6 +33,10 @@ class MessageSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["message_id", "sent_at"]
 
+    def get_replies(self, obj):
+        replies = obj.replies.all()
+        return MessageSerializer(replies, many=True).data
+
 
 # -------------------------
 # CONVERSATION SERIALIZER
