@@ -24,3 +24,33 @@ def cleanup_user_data(sender, instance, **kwargs):
     Notification.objects.filter(user=instance).delete()
     MessageHistory.objects.filter(message__sender=instance).delete()
     MessageHistory.objects.filter(message__receiver=instance).delete()
+
+
+@receiver(pre_save, sender=Message)
+def log_message_edit(sender, instance, **kwargs):
+    """
+    Before saving a Message update, store the old content into MessageHistory.
+    - Trigger only on updates (not create).
+    - Create a MessageHistory object using MessageHistory.objects.create(...)
+    - Mark instance.edited = True and preserve edited_by if provided (e.g., set by view)
+    """
+    if instance._state.adding:
+        return
+
+    try:
+        old = Message.objects.get(pk=instance.pk)
+    except Message.DoesNotExist:
+        return
+
+    if old.content != instance.content:
+        edited_by_user = getattr(instance, "edited_by", None)
+
+        MessageHistory.objects.create(
+            message=old,
+            old_content=old.content,
+            edited_at=timezone.now(),
+            edited_by=edited_by_user,
+        )
+
+        # mark this message as edited
+        instance.edited = True

@@ -35,3 +35,8 @@ def unread_messages_view(request):
     unread_messages = Message.unread.for_user(user)
     serializer = MessageSerializer(unread_messages, many=True)
     return Response(serializer.data)
+
+def perform_update(self, serializer):
+    # serializer.instance is the Message instance
+    serializer.instance.edited_by = self.request.user
+    serializer.save()
