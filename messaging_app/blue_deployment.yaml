@@ -1,40 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: django-messaging-deployment
-  labels:
-    app: messaging-app
+  name: django-blue
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
-      app: messaging-app
+      app: django
+      version: blue
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   template:
     metadata:
       labels:
-        app: messaging-app
+        app: django
+        version: blue
     spec:
       containers:
-        - name: messaging-app
-          image: robust-api-app:latest
+        - name: django
+          image: messaging_app:2.0
           ports:
             - containerPort: 8000
-          env:
-            - name: DJANGO_SETTINGS_MODULE
-              value: "messaging_app.settings"
-            - name: DATABASE_URL
-              value: "mysql://user:password@db:3306/messaging_db"
-              
-apiVersion: v1
-kind: Service
-metadata:
-  name: messaging-app-service
-spec:
-  selector:
-    app: messaging-app
-  ports:
-    - protocol: TCP
-      port: 8000
-      targetPort: 8000
-  type: ClusterIP
-
