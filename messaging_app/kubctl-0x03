@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e  # Exit on error
+
+DEPLOYMENT_NAME="django-blue"
+SERVICE_NAME="django-service"
+
+echo "Starting Rolling Update for $DEPLOYMENT_NAME..."
+
+kubectl apply -f blue_deployment.yaml
+
+echo "Monitoring rollout status..."
+kubectl rollout status deployment/$DEPLOYMENT_NAME
+
+SERVICE_IP=$(kubectl get service $SERVICE_NAME -o jsonpath='{.spec.clusterIP}')
+PORT=$(kubectl get service $SERVICE_NAME -o jsonpath='{.spec.ports[0].port}')
+
+echo "Testing app availability during update..."
+echo "Sending 10 continuous curl requests to http://$SERVICE_IP:$PORT/"
+
+for i in {1..10}; do
+  if curl -s --connect-timeout 2 http://$SERVICE_IP:$PORT/ > /dev/null; then
+    echo "[$i] App responded successfully"
+  else
+    echo "[$i] App failed to respond!"
+  fi
+  sleep 2
+done
+
+echo "Checking running pods after update..."
+kubectl get pods -l app=django
+
+echo "Rolling update completed successfully!"
