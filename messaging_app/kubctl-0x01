@@ -1,0 +1,31 @@
+#!/bin/bash
+
+DEPLOYMENT_NAME="django-messaging-deployment"
+NAMESPACE="default"
+
+echo "Scaling $DEPLOYMENT_NAME to 3 replicas..."
+kubectl scale deployment $DEPLOYMENT_NAME --replicas=3 --namespace=$NAMESPACE
+
+echo "Waiting for pods to scale..."
+sleep 10
+
+echo "Verifying running pods:"
+kubectl get pods -l app=messaging-app -n $NAMESPACE
+
+echo
+echo "Checking resource usage..."
+kubectl top pods -n $NAMESPACE || echo "Metrics server not installed. Run 'kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml'"
+
+echo
+echo "Running load test on Django app using wrk..."
+
+kubectl port-forward service/messaging-app-service 8000:8000 > /dev/null 2>&1 &
+PORT_FORWARD_PID=$!
+
+sleep 5
+
+wrk -t4 -c100 -d20s http://127.0.0.1:8000/ || echo "wrk tool not installed. Install using 'sudo apt install wrk -y'"
+
+kill $PORT_FORWARD_PID
+
+echo "Load test complete."
