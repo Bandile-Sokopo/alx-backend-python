@@ -4,7 +4,7 @@ pipeline {
     environment {
         REPO_URL = 'https://github.com/<your-username>/messaging_app.git'
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        DOCKER_IMAGE = '<your-dockerhub-username>/messaging_app'
+        DOCKER_IMAGE = '<Bandile-Sokopo>/messaging_app'
     }
 
     stages {
