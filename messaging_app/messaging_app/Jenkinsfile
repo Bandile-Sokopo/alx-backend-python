@@ -12,6 +12,7 @@ pipeline {
             steps {
                 echo "Cloning branch: ${env.BRANCH_NAME}"
                 git branch: "${env.BRANCH_NAME}", url: "${REPO_URL}"
+                credentialsId: 'github-credentials'
             }
         }
 
